@@ -22,7 +22,6 @@ void removeWhitespace(char* source) {
 
 formula createFormula(char* s) {
     removeWhitespace(s);
-
     formula f = malloc(sizeof(struct formula_t));
     f->literalsSet = hset_new(10, &literal_equal_fn, &literal_hash_fn, 
                         NULL /* elem_free_fn */);

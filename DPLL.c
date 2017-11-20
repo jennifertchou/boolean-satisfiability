@@ -22,7 +22,7 @@ int main(int argc, char *argv[]) {
     }
 
     char* formula_string = argv[1];
-    printf("Checking if %s is satisfiable...\n", formula_string);
+    printf("Checking if '%s' is satisfiable...\n", formula_string);
 
     // Verify that the formula is in CNF.
     // TODO
@@ -38,8 +38,6 @@ int main(int argc, char *argv[]) {
     freeFormula(f);
     return 0;
 }
-
-
 
 bool DPLL(formula f) {
     // If formula has no clauses, it is satisfiable.
@@ -190,6 +188,4 @@ formula Simplify(formula f, char l) {
     // return new formula
     return f;
 }
-
-
 
