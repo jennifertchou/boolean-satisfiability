@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include "DPLL.h"
 #include "util.h"
+#include "hset.h"
 
 int main(int argc, char *argv[]) {
     // Check if arguments are valid.
@@ -58,33 +59,55 @@ bool DPLL(formula f) {
     }
 
     // Unit propagation
-    // If formula contains a unit clause, make it true!
-    // for every unit clause l in formula
-    //     formula <-- unit_propagate(formula, l)
+    // If formula contains a clause with just one literal, you have to make it
+    // true!
     c = f->clauses;
-    bool foundUnitClause = false;
     
     while (c != NULL) {
         // Check if this is a unit clause
         literal lit = c->literals;
         if (lit != NULL && lit->next == NULL) {
             printf("Found unit clause %c\n", lit->l);
-            foundUnitClause = true;
+            // Perform unit propgation: make this literal true 
             f = unit_propagate(f, lit->l, lit->negation);
+
+            // Restart because we may have removed some clauses;
+            return DPLL(f);
         }
         c = c->next;
     }
+    
+    // Pure literal elimination
+    // If a literal occurs with only one polarity in the formula, it can
+    // always be assigned in a way that makes all clauses containing them true,
+    // so we can just erase that literal everywhere.
+    // c = f->clauses;
+    // bool foundPureLiteral = false;
+   
 
-    printf("foundUnitClause: %d\n", foundUnitClause);
-    // Restart because we may have no clauses or an empty clause now.
-    if (foundUnitClause) return DPLL(f);
-    
-    
+    // while (c != NULL) {
+    //     literal lit = c->literals;
+    //     while (lit != NULL) {
+
+    //         lit = lit->next;
+    //     }
+    //     c = c->next;
+    // }
+
     // for every literal l that occurs pure in in formula
     //     formula <-- pure_literal_assign(formula, l)
 
-    // v <-- choose a variable in formula
+    
+    if (f->clauses == NULL || f->clauses->literals == NULL) {
+        // The formula has no clauses, so it is satisfiable.
+        return true;
+    }
+    // Splitting case, choose any literal.
+    literal lit = f->clauses->literals;
 
+    return DPLL(unit_propagate(f, lit->l, lit->negation));
+    // TODO temporary return statement, deep copy f?
+ 
     // return DPLL(formula ^ v) or DPLL(Simplify(formula ^ ~v))
     return false;
 }
@@ -108,6 +131,7 @@ formula unit_propagate(formula f, char l, int negation) {
     while (c != NULL) {
         literal prevLit = NULL;
         literal lit = c->literals;
+        bool removedClause = false;
         while (lit != NULL) {
             // Check if this literal is the one we are setting to true.
             if (lit->l == l && lit->negation == negation) {
@@ -116,9 +140,13 @@ formula unit_propagate(formula f, char l, int negation) {
                 printf("Removing the clause with %d, %c\n", negation, l);
                 if (prevClause == NULL) {
                     f->clauses = c->next;
+                    prevClause = NULL;
                 } else {
                     prevClause->next = c->next;
+                    // No change to prevClause.
                 }
+                removedClause = true;
+                break;
             }
             else if (lit->l == l) {
                 // Remove this literal from the clause because it can't make
@@ -132,8 +160,14 @@ formula unit_propagate(formula f, char l, int negation) {
             prevLit = lit;
             lit = lit->next;
         }
-        prevClause = c;
-        c = c->next;
+
+        clause nextClause = c->next;
+        if (!removedClause) {
+            prevClause = c;
+        } else {
+            freeClause(c);
+        }
+        c = nextClause;
     }
     return f;
 }
@@ -144,7 +178,6 @@ formula unit_propagate(formula f, char l, int negation) {
 // assigned in a way that makes all clauses containing them true.
 // Thus, these clauses do not constrain the search anymore and can 
 // be deleted. 
-
 formula pure_literal_assign(formula f, char l) {
     return f;
 }

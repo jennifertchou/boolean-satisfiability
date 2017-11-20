@@ -4,7 +4,8 @@
 
 void removeWhitespace(char* source);
 formula createFormula(char* input);
-clause createClause(char* s);
+clause createClause(char* s, hset literalsSet);
 void freeFormula(formula f);
+void freeClause(clause c);
 
 #endif

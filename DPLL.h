@@ -1,5 +1,6 @@
 
 #include <stdbool.h>
+#include "hset.h"
 
 #ifndef _DPLL_H_
 #define _DPLL_H_
@@ -29,6 +30,8 @@ typedef struct clause_t* clause;
 
 struct formula_t {
     struct clause_t* clauses;
+    hset literalsSet;
+
 };
 typedef struct formula_t* formula;
 
