@@ -2,10 +2,13 @@ CC=gcc
 
 CFLAGS=-g -Wall -std=c99 -O3
 
-default: solver
+default: solver solver-test
 
 solver: queues.c hset.c util.c DPLL.c
 	clear && $(CC) $(CFLAGS) -o solver queues.c util.c hset.c DPLL.c
 
+solver-test: solver_test.c
+	$(CC) $(CFLAGS) -o solver-test solver_test.c
+
 clean: 
-	$(RM) solver
+	$(RM) solver solver-test
