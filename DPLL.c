@@ -29,8 +29,7 @@ int main(int argc, char *argv[]) {
 
     // Parse the formula and create the data structure.
     formula f = createFormula(formula_string);
-    printf("num clauses: %d\n", f->maxNumClauses);
-    printf("num literals: %d\n", f->maxNumLiterals);
+
     bool satisfiable = DPLL(f);
 
     if (satisfiable) printf("SATISFIABLE\n");
@@ -41,9 +40,10 @@ int main(int argc, char *argv[]) {
 }
 
 bool DPLL(formula f) {
+    //printFormula(f);
     // If formula has no clauses, it is satisfiable.
     if (f->clauses == NULL) {
-        printf("No clauses\n");
+        //printf("No clauses\n");
         return true;
     }
 
@@ -51,22 +51,21 @@ bool DPLL(formula f) {
     clause c = f->clauses;
     while (c != NULL) {
         if (c->literals == NULL) {
-            printf("Found empty clause\n");
+            //printf("Found empty clause\n");
             return false;
         }
         c = c->next;
     }
 
     // Unit propagation
-    // If formula contains a clause with just one literal, you have to make it
+    // If formula contains a clause with just one literal, make that literal
     // true.
     c = f->clauses;
-    
     while (c != NULL) {
         // Check if this is a unit clause
         literal lit = c->literals;
         if (lit != NULL && lit->next == NULL) {
-            printf("Found unit clause %c\n", lit->l);
+            //printf("Found unit clause %c\n", lit->l);
             // Perform unit propgation: make this literal true 
             f = unit_propagate(f, lit->l, lit->negation);
 
@@ -83,7 +82,6 @@ bool DPLL(formula f) {
     // c = f->clauses;
     // bool foundPureLiteral = false;
    
-
     // while (c != NULL) {
     //     literal lit = c->literals;
     //     while (lit != NULL) {
@@ -96,20 +94,18 @@ bool DPLL(formula f) {
     // for every literal l that occurs pure in formula
     //     formula <-- pure_literal_assign(formula, l)
 
+
     // Just in case there are no more clauses or literals left.
     if (f->clauses == NULL || f->clauses->literals == NULL) {
         // The formula has no clauses, so it is satisfiable.
         return true;
     }
-    // Splitting case, choose any literal.
-    literal lit = f->clauses->literals;
 
-    return DPLL(simplify(f, lit->l, lit->negation));
-    // TODO temporary return statement, deep copy f?
-    // do createFormula(formulaToString(f));
- 
-    // return DPLL(formula ^ v) or DPLL(Simplify(formula ^ ~v))
-    return false;
+    // Splitting case, choose any literal and try making it true or false.
+    literal lit = f->clauses->literals;
+    return 
+        DPLL(simplify(copyFormula(f), lit->l, 0)) 
+        || DPLL(simplify(f,lit->l, 1));
 }
 
 
@@ -137,7 +133,7 @@ formula unit_propagate(formula f, char l, int negation) {
             if (lit->l == l && lit->negation == negation) {
                 // Remove this entire clause, since the literal satisfies 
                 // this clause.
-                printf("Removing the clause with %d, %c\n", negation, l);
+                //printf("Removing the clause with %d, %c\n", negation, l);
                 if (prevClause == NULL) {
                     f->clauses = c->next;
                     prevClause = NULL;

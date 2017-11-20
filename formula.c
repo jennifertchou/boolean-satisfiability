@@ -134,6 +134,65 @@ clause createClause(char* s) {
     return c;
 }
 
+void printFormula(formula f) {
+    clause c = f->clauses;
+    while (c != NULL) {
+        printf("(");
+        literal lit = c->literals;
+        while (lit != NULL) {
+            if (lit->negation) {
+                printf("~");
+            }
+
+            char litString[2] = "\0"; /* gives {\0, \0} */
+            litString[0] = lit->l;
+            printf(litString);
+
+            if (lit->next != NULL) {
+                printf(" v ");
+            }
+            lit = lit->next;
+        }
+        printf(")");
+        if (c->next != NULL) {
+            printf(" ^ ");
+        }
+        c = c->next;
+    }
+    printf("\n");
+}
+
+formula copyFormula(formula f) {
+    char s[f->maxNumLiterals * 6 + 1];
+    memset(s, 0, sizeof(char) * (f->maxNumLiterals * 6 + 1));
+
+    clause c = f->clauses;
+    while (c != NULL) {
+        strcat(s, "(");
+        literal lit = c->literals;
+        while (lit != NULL) {
+            if (lit->negation) {
+                strcat(s, "~");
+            }
+
+            char litString[2] = "\0"; /* gives {\0, \0} */
+            litString[0] = lit->l;
+            strcat(s, litString);
+
+            if (lit->next != NULL) {
+                strcat(s, " v ");
+            }
+            lit = lit->next;
+        }
+        strcat(s, ")");
+        if (c->next != NULL) {
+            strcat(s, " ^ ");
+        }
+        c = c->next;
+    }
+    return createFormula(s);
+}
+
 void freeFormula(formula f) {
     clause c = f->clauses;
     while (c != NULL) {
