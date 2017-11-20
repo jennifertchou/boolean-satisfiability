@@ -4,7 +4,7 @@
 #include <assert.h>
 #include <stdbool.h>
 #include "DPLL.h"
-#include "util.h"
+#include "formula.h"
 #include "hset.h"
 
 int main(int argc, char *argv[]) {
@@ -29,7 +29,8 @@ int main(int argc, char *argv[]) {
 
     // Parse the formula and create the data structure.
     formula f = createFormula(formula_string);
-
+    printf("num clauses: %d\n", f->maxNumClauses);
+    printf("num literals: %d\n", f->maxNumLiterals);
     bool satisfiable = DPLL(f);
 
     if (satisfiable) printf("SATISFIABLE\n");
@@ -58,7 +59,7 @@ bool DPLL(formula f) {
 
     // Unit propagation
     // If formula contains a clause with just one literal, you have to make it
-    // true!
+    // true.
     c = f->clauses;
     
     while (c != NULL) {
@@ -92,10 +93,10 @@ bool DPLL(formula f) {
     //     c = c->next;
     // }
 
-    // for every literal l that occurs pure in in formula
+    // for every literal l that occurs pure in formula
     //     formula <-- pure_literal_assign(formula, l)
 
-    
+    // Just in case there are no more clauses or literals left.
     if (f->clauses == NULL || f->clauses->literals == NULL) {
         // The formula has no clauses, so it is satisfiable.
         return true;
@@ -103,8 +104,9 @@ bool DPLL(formula f) {
     // Splitting case, choose any literal.
     literal lit = f->clauses->literals;
 
-    return DPLL(unit_propagate(f, lit->l, lit->negation));
+    return DPLL(simplify(f, lit->l, lit->negation));
     // TODO temporary return statement, deep copy f?
+    // do createFormula(formulaToString(f));
  
     // return DPLL(formula ^ v) or DPLL(Simplify(formula ^ ~v))
     return false;
@@ -147,8 +149,8 @@ formula unit_propagate(formula f, char l, int negation) {
                 break;
             }
             else if (lit->l == l) {
-                // Remove this literal from the clause because it can't make
-                // this clause true.
+                // Remove the opposite of the literal from the clause because
+                // it can't make this clause true.
                 if (prevLit == NULL) {
                     c->literals = lit->next;
                 } else {
@@ -180,12 +182,10 @@ formula pure_literal_assign(formula f, char l) {
     return f;
 }
 
-formula Simplify(formula f, char l) {
+formula simplify(formula f, char l, int negation) {
     // remove clauses in formula where l is positive
-
     // remove ~l from clauses where it appears
-
     // return new formula
-    return f;
+    return unit_propagate(f, l, negation);
 }
 

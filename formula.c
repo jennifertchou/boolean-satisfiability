@@ -3,7 +3,7 @@
 #include <string.h>
 #include <assert.h>
 #include "DPLL.h"
-#include "util.h"
+#include "formula.h"
 #include "queues.h"
 #include "hset.h"
 
@@ -20,16 +20,55 @@ void removeWhitespace(char* source) {
     *i = 0;
 }
 
+int countNumClauses(char* s) {
+    char* s_copy = malloc(strlen(s) + 1); 
+    strcpy(s_copy, s);
+
+    int numClauses = 0;
+    char* clause_string = strtok(s_copy, "^");
+    while (clause_string != NULL) {
+        numClauses += 1;
+        clause_string = strtok(NULL, "^");
+    }
+    free(s_copy);
+    return numClauses;
+}
+
+int countNumLiterals(char* s) {
+    char* s_copy = malloc(strlen(s) + 1); 
+    strcpy(s_copy, s);
+
+    queue Q = queue_new();
+    char* clause_string = strtok(s_copy, "^");
+    while (clause_string != NULL) {
+        enq(Q, (void*)clause_string);
+        clause_string = strtok(NULL, "^");
+    }
+
+    int numLiterals = 0;
+    while (!queue_empty(Q)) {
+        char* clause_string = (char*)deq(Q);
+        char* lit_string = strtok(clause_string, "v");
+        while (lit_string != NULL) {
+            numLiterals += 1;
+            lit_string = strtok(NULL, "v");
+        }
+    }
+    queue_free(Q, NULL);
+    free(s_copy);
+    return numLiterals;
+}
+
 formula createFormula(char* s) {
     removeWhitespace(s);
     formula f = malloc(sizeof(struct formula_t));
-    f->literalsSet = hset_new(10, &literal_equal_fn, &literal_hash_fn, 
-                        NULL /* elem_free_fn */);
+
+    f->maxNumClauses = countNumClauses(s);
+    f->maxNumLiterals = countNumLiterals(s);
 
     // Save all the clauses in a queue for now in order for strtok
-    // to work when parsing the clause.
+    // to work when parsing the literals in the clause.
     queue Q = queue_new();
-
     char* clause_string = strtok(s, "^");
     while (clause_string != NULL) {
         enq(Q, (void*)clause_string);
@@ -40,7 +79,7 @@ formula createFormula(char* s) {
     while (!queue_empty(Q)) {
         char* clause_string = (char*)deq(Q);
         //printf("%s\n", clause_string);
-        clause c = createClause(clause_string, f->literalsSet);
+        clause c = createClause(clause_string);
         assert(c != NULL);
 
         if (prevClause == NULL) {
@@ -60,7 +99,7 @@ formula createFormula(char* s) {
     return f;
 }
 
-clause createClause(char* s, hset literalsSet) {
+clause createClause(char* s) {
     clause c = malloc(sizeof(struct clause_t));
 
     char* lit_string = strtok(s, "v");
@@ -76,7 +115,6 @@ clause createClause(char* s, hset literalsSet) {
             lit->l = lit_string[1];
             lit->negation = 1;
         }
-        hset_insert(literalsSet, (void*)&(lit->l));
 
         //printf("%d,%c\n", lit->negation, lit->l);
         if (prevLit == NULL) {
@@ -103,7 +141,6 @@ void freeFormula(formula f) {
         freeClause(c);
         c = nextClause;
     }
-    hset_free(f->literalsSet);
     free(f);
 }
 
