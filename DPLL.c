@@ -16,23 +16,23 @@ int main(int argc, char *argv[]) {
     char* formula_string = NULL;
 
     while ((opt = getopt(argc, argv, "hvf:")) != -1) {
-    switch (opt){
-        case 'h':
-        printf("./solver [-h] [-v] [-f x] -- program to determine if the "
-         "given boolean formula is satisfiable.\n");
-        printf("where:\n" 
-            "-h  show this help text\n"
-            "-v  verbose mode\n"
-            "-f  input formula such as '(a v ~b) ^ c ^ (~a v d)'\n");
-        return 0;
-        break;
-      case 'v': 
-        verbose = true;
-        break;
-      case 'f':
-        formula_string = optarg;
-        break;
-      }
+        switch (opt){
+            case 'h':
+            printf("./solver [-h] [-v] [-f x] -- program to determine if the "
+             "given boolean formula is satisfiable.\n");
+            printf("where:\n" 
+                "-h  show this help text\n"
+                "-v  verbose mode\n"
+                "-f  input formula such as '(a v ~b) ^ c ^ (~a v d)'\n");
+            return 0;
+            break;
+            case 'v': 
+            verbose = true;
+            break;
+            case 'f':
+            formula_string = optarg;
+            break;
+        }
     } 
 
     if (formula_string == NULL) {
@@ -100,7 +100,7 @@ bool DPLL(formula f) {
     // so we can just erase that literal everywhere.
     // c = f->clauses;
     // bool foundPureLiteral = false;
-   
+    
     // while (c != NULL) {
     //     literal lit = c->literals;
     //     while (lit != NULL) {
@@ -123,8 +123,8 @@ bool DPLL(formula f) {
     // Splitting case, choose any literal and try making it true or false.
     literal lit = f->clauses->literals;
     return 
-        DPLL(simplify(copyFormula(f), lit->l, 0)) 
-        || DPLL(simplify(f,lit->l, 1));
+    DPLL(simplify(copyFormula(f), lit->l, 0)) 
+    || DPLL(simplify(f,lit->l, 1));
 }
 
 

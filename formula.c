@@ -138,77 +138,77 @@ void printFormula(formula f) {
     clause c = f->clauses;
     while (c != NULL) {
         printf("(");
-        literal lit = c->literals;
-        while (lit != NULL) {
-            if (lit->negation) {
-                printf("~");
-            }
+            literal lit = c->literals;
+            while (lit != NULL) {
+                if (lit->negation) {
+                    printf("~");
+                }
 
             char litString[2] = "\0"; /* gives {\0, \0} */
-            litString[0] = lit->l;
-            printf(litString);
+                litString[0] = lit->l;
+                printf(litString);
 
-            if (lit->next != NULL) {
-                printf(" v ");
+                if (lit->next != NULL) {
+                    printf(" v ");
+                }
+                lit = lit->next;
             }
-            lit = lit->next;
+            printf(")");
+            if (c->next != NULL) {
+                printf(" ^ ");
+            }
+            c = c->next;
         }
-        printf(")");
-        if (c->next != NULL) {
-            printf(" ^ ");
-        }
-        c = c->next;
+        printf("\n");
     }
-    printf("\n");
-}
 
-formula copyFormula(formula f) {
-    char s[f->maxNumLiterals * 6 + 1];
-    memset(s, 0, sizeof(char) * (f->maxNumLiterals * 6 + 1));
+    formula copyFormula(formula f) {
+        char s[f->maxNumLiterals * 6 + 1];
+        memset(s, 0, sizeof(char) * (f->maxNumLiterals * 6 + 1));
 
-    clause c = f->clauses;
-    while (c != NULL) {
-        strcat(s, "(");
-        literal lit = c->literals;
-        while (lit != NULL) {
-            if (lit->negation) {
-                strcat(s, "~");
-            }
+        clause c = f->clauses;
+        while (c != NULL) {
+            strcat(s, "(");
+                literal lit = c->literals;
+                while (lit != NULL) {
+                    if (lit->negation) {
+                        strcat(s, "~");
+                    }
 
             char litString[2] = "\0"; /* gives {\0, \0} */
-            litString[0] = lit->l;
-            strcat(s, litString);
+                    litString[0] = lit->l;
+                    strcat(s, litString);
 
-            if (lit->next != NULL) {
-                strcat(s, " v ");
+                    if (lit->next != NULL) {
+                        strcat(s, " v ");
+                    }
+                    lit = lit->next;
+                }
+                strcat(s, ")");
+                if (c->next != NULL) {
+                    strcat(s, " ^ ");
+                }
+                c = c->next;
             }
-            lit = lit->next;
+            return createFormula(s);
         }
-        strcat(s, ")");
-        if (c->next != NULL) {
-            strcat(s, " ^ ");
+
+        void freeFormula(formula f) {
+            clause c = f->clauses;
+            while (c != NULL) {
+                clause nextClause = c->next;
+                freeClause(c);
+                c = nextClause;
+            }
+            free(f);
         }
-        c = c->next;
-    }
-    return createFormula(s);
-}
 
-void freeFormula(formula f) {
-    clause c = f->clauses;
-    while (c != NULL) {
-        clause nextClause = c->next;
-        freeClause(c);
-        c = nextClause;
-    }
-    free(f);
-}
-
-void freeClause(clause c) {
-    literal lit = c->literals;
-    while (lit != NULL) {
-        literal nextLit = lit->next;
-        free(lit);
-        lit = nextLit;
-    }
-    free(c);
-}
+        void freeClause(clause c) {
+            literal lit = c->literals;
+            while (lit != NULL) {
+                literal nextLit = lit->next;
+                free(lit);
+                lit = nextLit;
+            }
+            free(c);
+        }

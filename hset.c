@@ -55,17 +55,17 @@ static bool is_chains(hset H, size_t lo, size_t hi) {
 }
 
 bool is_hset(hset H) {
-    return  H != NULL
-    && H->capacity > 0
-    && H->elem_equal != NULL
-    && H->elem_hash != NULL
-    && is_chains(H, 0, H->capacity);
+  return  H != NULL
+  && H->capacity > 0
+  && H->elem_equal != NULL
+  && H->elem_hash != NULL
+  && is_chains(H, 0, H->capacity);
 }
 
 hset hset_new(size_t capacity,  
-              elem_equal_fn *elem_equal,
-              elem_hash_fn *elem_hash, 
-              elem_free_fn *elem_free) {
+  elem_equal_fn *elem_equal,
+  elem_hash_fn *elem_hash, 
+  elem_free_fn *elem_free) {
   hset H = malloc(sizeof(struct hset_header));
   H->size = 0;
   H->capacity = capacity;
