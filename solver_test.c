@@ -27,8 +27,9 @@ char buf[BUFSIZE];
 int main() {
     printf("SATISFIABLE FORMULAS:\n");
     for (int i = 0; i < 6; i++) {
-        char* command = malloc(strlen("./solver ") + strlen(yes_cases[i]) + 3);
-        strcpy(command, "./solver ");
+        memset(buf, 0, BUFSIZE);
+        char* command = malloc(strlen("./solver -f ' '") + strlen(yes_cases[i]));
+        strcpy(command, "./solver -f ");
         strcat(command, "'");
         strcat(command, yes_cases[i]);
         strcat(command, "'");
@@ -37,9 +38,21 @@ int main() {
             printf("Error opening pipe!\n");
             return -1;
         }
-        while (fgets(buf, BUFSIZE, fp) != NULL) {
-            printf(buf);
+
+        // Get the last line of output which is 
+        // SATISFIABLE or NOT SATISFIABLE
+        while (fgets(buf, BUFSIZE, fp) != NULL) {}
+
+        // Assert that the output is "SATISFIABLE".
+        if (buf[0] == 'S') {
+            printf("%s...Test case passed\n", yes_cases[i]);
+        } else {
+            // Wrong answer!
+            printf("Incorrect response for %s\n", yes_cases[i]);
+            printf("actual: NOT SATISFIABLE\nexpected: SATISFIABLE\n");
+            return 1;
         }
+
         if(pclose(fp)) {
             printf("Command not found or exited with error status\n");
             return -1;
@@ -50,8 +63,9 @@ int main() {
 
     printf("NOT SATISFIABLE FORMULAS:\n");
     for (int i = 0; i < 4; i++) {
-        char* command = malloc(strlen("./solver ") + strlen(no_cases[i]) + 3);
-        strcpy(command, "./solver ");
+        memset(buf, 0, BUFSIZE);
+        char* command = malloc(strlen("./solver -f ' '") + strlen(no_cases[i]));
+        strcpy(command, "./solver -f ");
         strcat(command, "'");
         strcat(command, no_cases[i]);
         strcat(command, "'");
@@ -60,8 +74,19 @@ int main() {
             printf("Error opening pipe!\n");
             return -1;
         }
-        while (fgets(buf, BUFSIZE, fp) != NULL) {
-            printf(buf);
+
+        // Get the last line of output which is 
+        // SATISFIABLE or NOT SATISFIABLE
+        while (fgets(buf, BUFSIZE, fp) != NULL) {}
+
+        // Assert that the output is "NOT SATISFIABLE".
+        if (buf[0] == 'N') {
+            printf("%s...Test case passed\n", no_cases[i]);
+        } else {
+            // Wrong answer!
+            printf("Incorrect response for %s\n", no_cases[i]);
+            printf("actual: SATISFIABLE\nexpected: NOT SATISFIABLE\n");
+            return 1;
         }
 
         if(pclose(fp))  {

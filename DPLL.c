@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+#include <getopt.h>
 #include <assert.h>
 #include <stdbool.h>
 #include "DPLL.h"
@@ -8,21 +10,37 @@
 #include "hset.h"
 
 int main(int argc, char *argv[]) {
-    // Check if arguments are valid.
-    if (argc <= 1) {
-        printf("Please enter the boolean formula in CNF as the argument, "
-            "like: ./solver '(a v ~b) ^ c ^ (~a v d)'\n");
-        return 1;
-    }
-    if (argc >= 3) {
-        printf("Too many arguments entered\n"
-            "Please enter only the boolean formula in CNF as the argument, "
-            "like: ./solver '(a v ~b) ^ c ^ (~a v d)'\n");
+
+    int opt;
+    bool verbose = false;
+    char* formula_string = NULL;
+
+    while ((opt = getopt(argc, argv, "hvf:")) != -1) {
+    switch (opt){
+        case 'h':
+        printf("./solver [-h] [-v] [-f x] -- program to determine if the "
+         "given boolean formula is satisfiable.\n");
+        printf("where:\n" 
+            "-h  show this help text\n"
+            "-v  verbose mode\n"
+            "-f  input formula such as '(a v ~b) ^ c ^ (~a v d)'\n");
+        return 0;
+        break;
+      case 'v': 
+        verbose = true;
+        break;
+      case 'f':
+        formula_string = optarg;
+        break;
+      }
+    } 
+
+    if (formula_string == NULL) {
+        printf("Missing boolean formula input -- run ./solver -h for help\n");
         return 1;
     }
 
-    char* formula_string = argv[1];
-    printf("Checking if '%s' is satisfiable...\n", formula_string);
+    if (verbose) printf("Checking if '%s' is satisfiable...\n", formula_string);
 
     // Verify that the formula is in CNF.
     // TODO
@@ -34,6 +52,7 @@ int main(int argc, char *argv[]) {
 
     if (satisfiable) printf("SATISFIABLE\n");
     else printf("NOT SATISFIABLE\n");
+
 
     freeFormula(f);
     return 0;
