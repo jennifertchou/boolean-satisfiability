@@ -9,10 +9,11 @@
 #include "formula.h"
 #include "hset.h"
 
+bool verbose = false;
+
 int main(int argc, char *argv[]) {
 
     int opt;
-    bool verbose = false;
     char* formula_string = NULL;
     char* fileName = NULL;
 
@@ -45,9 +46,6 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    // Verify that the formula is in CNF.
-    // TODO
-
     // Parse the formula and create the data structure.
     formula f;
     if (formula_string != NULL) {
@@ -55,6 +53,12 @@ int main(int argc, char *argv[]) {
     } else {
         f = createFormulaFromDIMACS(fileName);
     }
+
+    if (f == NULL) {
+        printf("Could not find file %s\n", fileName);
+        return 1;
+    }
+
     if (verbose) {
         printf("Checking satisfiability of: ");
         printFormula(f);
@@ -65,13 +69,12 @@ int main(int argc, char *argv[]) {
     if (satisfiable) printf("SATISFIABLE\n");
     else printf("NOT SATISFIABLE\n");
 
-
     freeFormula(f);
     return 0;
 }
 
 bool DPLL(formula f) {
-    printFormula(f);
+    if (verbose) printFormula(f);
     // If formula has no clauses, it is satisfiable.
     if (f->clauses == NULL) {
         //printf("No clauses\n");
@@ -96,8 +99,7 @@ bool DPLL(formula f) {
         // Check if this is a unit clause
         literal lit = c->literals;
         if (lit != NULL && lit->next == NULL) {
-            //printf("Found unit clause %c\n", lit->l);
-            // Perform unit propgation: make this literal true 
+            // Perform unit propgation: make this literal true
             f = unit_propagate(f, lit->l, lit->intL, lit->negation);
 
             // Restart because we may have removed some clauses;
@@ -133,10 +135,10 @@ bool DPLL(formula f) {
     }
 
     // Splitting case, choose any literal and try making it true or false.
+    //printf("split case\n");
     literal lit = f->clauses->literals;
-    return 
-    DPLL(simplify(copyFormula(f), lit->l, lit->intL, 0)) 
-    || DPLL(simplify(f,lit->l, lit->intL, 1));
+    return DPLL(simplify(copyFormula(f), lit->l, lit->intL, 0))
+            || DPLL(simplify(f,lit->l, lit->intL, 1));
 }
 
 
@@ -154,20 +156,25 @@ bool DPLL(formula f) {
 // Remove clauses in the formula where ~l appears and remove l from
 // clauses where it appears.
 formula unit_propagate(formula f, char l, int intL, int negation) {
+    //printf("in unit_propagate\n");
+    // printFormula(f);
     clause prevClause = NULL;
     clause c = f->clauses;
     while (c != NULL) {
         literal prevLit = NULL;
         literal lit = c->literals;
         bool removedClause = false;
-        bool removedLiteral = false;
         while (lit != NULL) {
+            bool removedLiteral = false;
             // Check if this literal is the one we are setting to true.
             if (( (!f->isDIMACS && lit->l == l) || (f->isDIMACS && lit->intL == intL) )
                     && lit->negation == negation) {
                 // Remove this entire clause, since the literal satisfies 
                 // this clause.
-                //printf("Removing the clause with %d, %c\n", negation, l);
+
+                //if (f->isDIMACS) printf("Removing the clause with %d, %d\n", negation, intL);
+                //else printf("Removing the clause with %d, %c\n", negation, l);
+
                 if (prevClause == NULL) {
                     f->clauses = c->next;
                     prevClause = NULL;
@@ -182,6 +189,7 @@ formula unit_propagate(formula f, char l, int intL, int negation) {
             else if ((!f->isDIMACS && lit->l == l) || (f->isDIMACS && lit->intL == intL)) {
                 // Remove the opposite of the literal from the clause because
                 // it can't make this clause true.
+                //printf("Removing the literal %d, %c\n", lit->negation, l);
                 if (prevLit == NULL) {
                     c->literals = lit->next;
                     prevLit = NULL;

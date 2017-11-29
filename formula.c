@@ -143,6 +143,11 @@ formula createFormulaFromDIMACS(char* fileName) {
     clause prevClause = NULL;
 
     FILE* file = fopen(fileName, "r");
+
+    if (file == NULL) {
+        return NULL;
+    }
+    
     char line[256];
     while (fgets(line, sizeof(line), file)) {
         // Ignore comments.
@@ -259,34 +264,51 @@ void printFormula(formula f) {
 }
 
 formula copyFormula(formula f) {
-    char s[f->maxNumLiterals * 6 + 1];
-    memset(s, 0, sizeof(char) * (f->maxNumLiterals * 6 + 1));
+    formula f_copy = malloc(sizeof(struct formula_t));
+    f_copy->maxNumClauses = f->maxNumClauses;
+    f_copy->maxNumLiterals = f->maxNumLiterals;
+    f_copy->isDIMACS = f->isDIMACS;
 
     clause c = f->clauses;
+    clause prevClause = NULL;
     while (c != NULL) {
-        strcat(s, "(");
+        clause c_copy = malloc(sizeof(struct clause_t));
+        if (prevClause == NULL) {
+            f_copy->clauses = c_copy;
+        } else {
+            prevClause->next = c_copy;
+        }
+        prevClause = c_copy;
+
         literal lit = c->literals;
+        literal prevLit = NULL;
         while (lit != NULL) {
-            if (lit->negation) {
-                strcat(s, "~");
+            literal lit_copy = malloc(sizeof(struct literal_t));
+            if (prevLit == NULL) {
+                c_copy->literals = lit_copy;
+            } else {
+                prevLit->next = lit_copy;
             }
+            prevLit = lit_copy;
 
-            char litString[2] = "\0"; /* gives {\0, \0} */
-            litString[0] = lit->l;
-            strcat(s, litString);
-
-            if (lit->next != NULL) {
-                strcat(s, " v ");
+            lit_copy->negation = lit->negation;
+            if (!f->isDIMACS) {
+                lit_copy->l = lit->l;
+            } else {
+                lit_copy->intL = lit->intL;
             }
             lit = lit->next;
         }
-        strcat(s, ")");
-        if (c->next != NULL) {
-            strcat(s, " ^ ");
+        if (prevLit != NULL) {
+            prevLit->next = NULL;
         }
         c = c->next;
     }
-    return createFormula(s);
+    if (prevClause != NULL) {
+        prevClause->next = NULL;
+    }
+
+    return f_copy;
 }
 
 void freeFormula(formula f) {

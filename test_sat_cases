@@ -1,0 +1,4 @@
+#!/bin/bash
+for filename in sat_cases/*.cnf; do
+    ./solver -f "$filename"
+done
