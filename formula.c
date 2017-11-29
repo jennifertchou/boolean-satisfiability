@@ -62,6 +62,7 @@ int countNumLiterals(char* s) {
 formula createFormula(char* s) {
     removeWhitespace(s);
     formula f = malloc(sizeof(struct formula_t));
+    f->isDIMACS = false;
 
     f->maxNumClauses = countNumClauses(s);
     f->maxNumLiterals = countNumLiterals(s);
@@ -134,6 +135,98 @@ clause createClause(char* s) {
     return c;
 }
 
+formula createFormulaFromDIMACS(char* fileName) {
+    formula f = malloc(sizeof(struct formula_t));
+    f->isDIMACS = true;
+    int numVars = 0; // Will always get initialized.
+    int numClauses = 0; // Will always get initialized.
+    clause prevClause = NULL;
+
+    FILE* file = fopen(fileName, "r");
+    char line[256];
+    while (fgets(line, sizeof(line), file)) {
+        // Ignore comments.
+        if (line[0] == 'c') {
+            continue;
+        }
+        // Find problem statement line : p cnf numVars numClauses.
+        if (line[0] == 'p') {
+            strtok(line, " ");
+            strtok(NULL, " ");
+            numVars = atoi(strtok(NULL, " "));
+            numClauses = atoi(strtok(NULL, " "));
+            continue;
+        }
+
+        // EOF.
+        if (line[0] == '%') {
+            break;
+        }
+
+        // Normal case: x y z 0.
+        clause c = createClauseFromDIMACS(line);
+        assert(c != NULL);
+
+        if (prevClause == NULL) {
+            f->clauses = c;
+            prevClause = c;
+        } else {
+            prevClause->next = c;
+            prevClause = c; 
+        }   
+    }
+    
+    fclose(file);
+
+    if (prevClause != NULL) {
+        prevClause->next = NULL;
+    }
+
+    f->maxNumLiterals = numVars;
+    f->maxNumClauses = numClauses;
+    return f;
+}
+
+// line looks like: x y z 0
+clause createClauseFromDIMACS(char* line) {
+    clause c = malloc(sizeof(struct clause_t));
+
+    literal lit1 = malloc(sizeof(struct literal_t));
+    literal lit2 = malloc(sizeof(struct literal_t));
+    literal lit3 = malloc(sizeof(struct literal_t));
+
+    char* l1 = strtok(line, " ");
+    lit1->intL = abs(atoi(l1));
+    if (l1[0] == '-') {
+        lit1->negation = 1;
+    } else {
+        lit1->negation = 0;
+    }
+
+    char* l2 = strtok(NULL, " ");
+    lit2->intL = abs(atoi(l2));
+    if (l2[0] == '-') {
+        lit2->negation = 1;
+    } else {
+        lit2->negation = 0;
+    }
+
+    char* l3 = strtok(NULL, " ");
+    lit3->intL = abs(atoi(l3));
+    if (l3[0] == '-') {
+        lit3->negation = 1;
+    } else {
+        lit3->negation = 0;
+    }
+
+    c->literals = lit1;
+    lit1->next = lit2;
+    lit2->next = lit3;
+    lit3->next = NULL;
+
+    return c;
+}
+
 void printFormula(formula f) {
     clause c = f->clauses;
     while (c != NULL) {
@@ -143,10 +236,13 @@ void printFormula(formula f) {
             if (lit->negation) {
                 printf("~");
             }
-
-            char litString[2] = "\0"; /* gives {\0, \0} */
-            litString[0] = lit->l;
-            printf(litString);
+            if (!f->isDIMACS) {
+                char litString[2] = "\0"; /* gives {\0, \0} */
+                litString[0] = lit->l;
+                printf(litString);
+            } else {
+                printf("%d", lit->intL);
+            }
 
             if (lit->next != NULL) {
                 printf(" v ");
@@ -207,8 +303,12 @@ void freeClause(clause c) {
     literal lit = c->literals;
     while (lit != NULL) {
         literal nextLit = lit->next;
-        free(lit);
+        freeLiteral(lit);
         lit = nextLit;
     }
     free(c);
+}
+
+void freeLiteral(literal lit) {
+    free(lit);
 }

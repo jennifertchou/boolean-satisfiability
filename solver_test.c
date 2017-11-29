@@ -28,8 +28,8 @@ int main() {
     printf("SATISFIABLE FORMULAS:\n");
     for (int i = 0; i < 6; i++) {
         memset(buf, 0, BUFSIZE);
-        char* command = malloc(strlen("./solver -f ' '") + strlen(yes_cases[i]));
-        strcpy(command, "./solver -f ");
+        char* command = malloc(strlen("./solver -i ' '") + strlen(yes_cases[i]));
+        strcpy(command, "./solver -i ");
         strcat(command, "'");
         strcat(command, yes_cases[i]);
         strcat(command, "'");
@@ -63,8 +63,8 @@ int main() {
     printf("\nNOT SATISFIABLE FORMULAS:\n");
     for (int i = 0; i < 4; i++) {
         memset(buf, 0, BUFSIZE);
-        char* command = malloc(strlen("./solver -f ' '") + strlen(no_cases[i]));
-        strcpy(command, "./solver -f ");
+        char* command = malloc(strlen("./solver -i ' '") + strlen(no_cases[i]));
+        strcpy(command, "./solver -i ");
         strcat(command, "'");
         strcat(command, no_cases[i]);
         strcat(command, "'");
