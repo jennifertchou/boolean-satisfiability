@@ -45,7 +45,7 @@ int main() {
 
         // Assert that the output is "SATISFIABLE".
         if (buf[0] == 'S') {
-            printf("%s...Test case passed\n", yes_cases[i]);
+            printf("'%s' -- Test case passed\n", yes_cases[i]);
         } else {
         // Wrong answer!
             printf("Incorrect response for %s\n", yes_cases[i]);
@@ -80,7 +80,7 @@ int main() {
 
         // Assert that the output is "NOT SATISFIABLE".
         if (buf[0] == 'N') {
-            printf("%s...Test case passed\n", no_cases[i]);
+            printf("'%s' -- Test case passed\n", no_cases[i]);
         } else {
         // Wrong answer!
             printf("Incorrect response for %s\n", no_cases[i]);
@@ -94,6 +94,6 @@ int main() {
         }
         free(command);
     }
-    printf("All tests passed!\n");
+    printf("\nAll tests passed!\n");
     return 0;
 }

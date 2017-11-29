@@ -1,4 +1,4 @@
-#include <stdio.h>
+2#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -18,8 +18,8 @@ int main(int argc, char *argv[]) {
     while ((opt = getopt(argc, argv, "hvf:")) != -1) {
         switch (opt){
             case 'h':
-            printf("./solver [-h] [-v] [-f x] -- program to determine if the "
-             "given boolean formula is satisfiable.\n");
+            printf("./solver [-h] [-v] [-f x] -- program to determine whether "
+             "the given boolean formula is satisfiable or not.\n");
             printf("where:\n" 
                 "-h  show this help text\n"
                 "-v  verbose mode\n"
@@ -100,7 +100,7 @@ bool DPLL(formula f) {
     // so we can just erase that literal everywhere.
     // c = f->clauses;
     // bool foundPureLiteral = false;
-    
+
     // while (c != NULL) {
     //     literal lit = c->literals;
     //     while (lit != NULL) {
@@ -131,7 +131,8 @@ bool DPLL(formula f) {
 // Unit propagation:
 // If a clause is a unit clause (it contains only a single unassigned
 // literal), this clause can only be satisfied by assigning the necessary 
-// value to make this literal true.
+// value to make this literal true. You can remove the negation of the literal
+// from any clauses because it can't make its clause true. 
 //
 // If l is a unit clause, l should be made true.
 // Remove clauses in the formula where l appears and remove ~l from
@@ -203,4 +204,3 @@ formula simplify(formula f, char l, int negation) {
     // return new formula
     return unit_propagate(f, l, negation);
 }
-

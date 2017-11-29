@@ -37,10 +37,12 @@ void removeWhitespace(char* source);
 int countNumClauses(char* s);
 int countNumLiterals(char* s);
 formula createFormula(char* input);
+formula createFormulaFromFile(FILE* file);
 clause createClause(char* s);
 void printFormula(formula f);
 formula copyFormula(formula f);
 void freeFormula(formula f);
 void freeClause(clause c);
+
 
 #endif
