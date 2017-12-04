@@ -5,7 +5,6 @@
 #include "DPLL.h"
 #include "formula.h"
 #include "queues.h"
-#include "hset.h"
 
 
 void removeWhitespace(char* source) {
@@ -147,7 +146,7 @@ formula createFormulaFromDIMACS(char* fileName) {
     if (file == NULL) {
         return NULL;
     }
-    
+
     char line[256];
     while (fgets(line, sizeof(line), file)) {
         // Ignore comments.

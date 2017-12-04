@@ -7,7 +7,6 @@
 #include <stdbool.h>
 #include "DPLL.h"
 #include "formula.h"
-#include "hset.h"
 
 bool verbose = false;
 
@@ -17,6 +16,7 @@ int main(int argc, char *argv[]) {
     char* formula_string = NULL;
     char* fileName = NULL;
 
+    // Parse command line flags.
     while ((opt = getopt(argc, argv, "hvi:f:")) != -1) {
         switch (opt){
             case 'h':
@@ -46,11 +46,17 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
+    if (formula_string != NULL && fileName != NULL) {
+        printf("Found two inputs -- please use only one of -i or -f.\n");
+        return 1;
+    }
+
     // Parse the formula and create the data structure.
     formula f;
     if (formula_string != NULL) {
         f = createFormula(formula_string);
     } else {
+        assert(fileName != NULL);
         f = createFormulaFromDIMACS(fileName);
     }
 
@@ -64,13 +70,98 @@ int main(int argc, char *argv[]) {
         printFormula(f);
     }
 
-    bool satisfiable = DPLL(f);
+    // Run the satisfiability algorithm.
+    bool satisfiable;
+    if (!f->isDIMACS) {
+        satisfiable = DPLL(f);
+    } else {
+        char* assignment = malloc(sizeof(char) * (f->maxNumLiterals + 1));
+        memset(assignment, 0, f->maxNumLiterals + 1);
+        satisfiable = DPLL_DIMACS(f, assignment);
+        if (satisfiable) {
+            for (int i = 0; i < f->maxNumLiterals; i++) {
+                if (assignment[i]) {
+                    printf("%d ", i);
+                }
+            }
+            printf("\n");
+        }
+        
+        free(assignment);
+    }
 
     if (satisfiable) printf("SATISFIABLE\n");
     else printf("NOT SATISFIABLE\n");
 
     freeFormula(f);
     return 0;
+}
+
+bool DPLL_DIMACS(formula f, char assignment[]) {
+    if (verbose) printFormula(f);
+    // If formula has no clauses, it is satisfiable.
+    if (f->clauses == NULL) {
+        //printf("No clauses\n");
+        return true;
+    }
+
+    // If formula has an empty clause, it is not satisfiable.
+    clause c = f->clauses;
+    while (c != NULL) {
+        if (c->literals == NULL) {
+            //printf("Found empty clause\n");
+            return false;
+        }
+        c = c->next;
+    }
+
+    // Unit propagation
+    // If formula contains a clause with just one literal, make that literal
+    // true.
+    c = f->clauses;
+    while (c != NULL) {
+        // Check if this is a unit clause
+        literal lit = c->literals;
+        int var = lit->intL;
+        if (lit != NULL && lit->next == NULL) {
+            // Perform unit propgation: make this literal true
+            f = unit_propagate(f, lit->l, lit->intL, lit->negation);
+
+            // Restart because we may have removed some clauses
+            if (DPLL_DIMACS(f, assignment)) {
+                assignment[var] = 1;
+                return true;
+                
+            } else {
+                return false;
+            }
+            
+        }
+        c = c->next;
+    }
+
+    // Just in case there are no more clauses or literals left.
+    if (f->clauses == NULL || f->clauses->literals == NULL) {
+        // The formula has no clauses, so it is satisfiable.
+        return true;
+    }
+
+    // Splitting case, choose any literal and try making it true or false.
+    //printf("split case\n");
+    literal lit = f->clauses->literals;
+    int var = lit->intL;
+    formula formula_copy = copyFormula(f);
+    if (DPLL_DIMACS(simplify(formula_copy, lit->l, lit->intL, 0), assignment)) {
+        assignment[var] = 1;
+        freeFormula(formula_copy);
+        return true;
+    } else if (DPLL_DIMACS(simplify(f,lit->l, lit->intL, 1), assignment)) {
+        assignment[var] = 1;
+        freeFormula(formula_copy);
+        return true;
+    }
+    freeFormula(formula_copy);
+    return false;
 }
 
 bool DPLL(formula f) {
@@ -107,26 +198,6 @@ bool DPLL(formula f) {
         }
         c = c->next;
     }
-    
-    // Pure literal elimination
-    // If a literal occurs with only one polarity in the formula, it can
-    // always be assigned in a way that makes all clauses containing them true,
-    // so we can just erase that literal everywhere.
-    // c = f->clauses;
-    // bool foundPureLiteral = false;
-
-    // while (c != NULL) {
-    //     literal lit = c->literals;
-    //     while (lit != NULL) {
-
-    //         lit = lit->next;
-    //     }
-    //     c = c->next;
-    // }
-
-    // for every literal l that occurs pure in formula
-    //     formula <-- pure_literal_assign(formula, l)
-
 
     // Just in case there are no more clauses or literals left.
     if (f->clauses == NULL || f->clauses->literals == NULL) {

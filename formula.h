@@ -15,7 +15,8 @@
 
 struct literal_t {
     int negation;
-    // Only one of l or intL will be used.
+    // Only one of l or intL will be used, depending if the variable is a
+    // letter or a number.
     char l;
     int intL;
     struct literal_t* next;
