@@ -61,13 +61,12 @@ int countNumLiterals(char* s) {
 formula createFormula(char* s) {
     removeWhitespace(s);
     formula f = malloc(sizeof(struct formula_t));
-    f->isDIMACS = false;
 
     f->maxNumClauses = countNumClauses(s);
     f->maxNumLiterals = countNumLiterals(s);
 
-    // Save all the clauses in a queue for now in order for strtok
-    // to work when parsing the literals in the clause.
+    // Put all the clauses in a queue for now in order for strtok
+    // to work when parsing the literals within the clause.
     queue Q = queue_new();
     char* clause_string = strtok(s, "^");
     while (clause_string != NULL) {
@@ -75,10 +74,10 @@ formula createFormula(char* s) {
         clause_string = strtok(NULL, "^");
     }
 
+    // Start emptying the queue of clauses and parse each clause.
     clause prevClause = NULL;
     while (!queue_empty(Q)) {
         char* clause_string = (char*)deq(Q);
-        //printf("%s\n", clause_string);
         clause c = createClause(clause_string);
         assert(c != NULL);
 
@@ -102,21 +101,19 @@ formula createFormula(char* s) {
 clause createClause(char* s) {
     clause c = malloc(sizeof(struct clause_t));
 
-    char* lit_string = strtok(s, "v");
+    char* l = strtok(s, "v");
 
     literal prevLit = NULL;
-    while (lit_string != NULL) {
+    while (l != NULL) {
         literal lit = malloc(sizeof(struct literal_t));
 
-        if (lit_string[0] != '~') {
-            lit->l = lit_string[0];
-            lit->negation = 0;
-        } else {
-            lit->l = lit_string[1];
+        lit->l = abs(atoi(l));
+        if (l[0] == '-') {
             lit->negation = 1;
+        } else {
+            lit->negation = 0;
         }
 
-        //printf("%d,%c\n", lit->negation, lit->l);
         if (prevLit == NULL) {
             c->literals = lit;
             prevLit = lit;
@@ -125,7 +122,7 @@ clause createClause(char* s) {
             prevLit = lit;
         }
         
-        lit_string = strtok(NULL, "v");
+        l = strtok(NULL, "v");
     }
     if (prevLit != NULL) {
         prevLit->next = NULL;
@@ -136,7 +133,6 @@ clause createClause(char* s) {
 
 formula createFormulaFromDIMACS(char* fileName) {
     formula f = malloc(sizeof(struct formula_t));
-    f->isDIMACS = true;
     int numVars = 0; // Will always get initialized.
     int numClauses = 0; // Will always get initialized.
     clause prevClause = NULL;
@@ -200,7 +196,7 @@ clause createClauseFromDIMACS(char* line) {
     literal lit3 = malloc(sizeof(struct literal_t));
 
     char* l1 = strtok(line, " ");
-    lit1->intL = abs(atoi(l1));
+    lit1->l = abs(atoi(l1));
     if (l1[0] == '-') {
         lit1->negation = 1;
     } else {
@@ -208,7 +204,7 @@ clause createClauseFromDIMACS(char* line) {
     }
 
     char* l2 = strtok(NULL, " ");
-    lit2->intL = abs(atoi(l2));
+    lit2->l = abs(atoi(l2));
     if (l2[0] == '-') {
         lit2->negation = 1;
     } else {
@@ -216,7 +212,7 @@ clause createClauseFromDIMACS(char* line) {
     }
 
     char* l3 = strtok(NULL, " ");
-    lit3->intL = abs(atoi(l3));
+    lit3->l = abs(atoi(l3));
     if (l3[0] == '-') {
         lit3->negation = 1;
     } else {
@@ -238,15 +234,9 @@ void printFormula(formula f) {
         literal lit = c->literals;
         while (lit != NULL) {
             if (lit->negation) {
-                printf("~");
+                printf("-");
             }
-            if (!f->isDIMACS) {
-                char litString[2] = "\0"; /* gives {\0, \0} */
-                litString[0] = lit->l;
-                printf(litString);
-            } else {
-                printf("%d", lit->intL);
-            }
+            printf("%d", lit->l);
 
             if (lit->next != NULL) {
                 printf(" v ");
@@ -266,7 +256,6 @@ formula copyFormula(formula f) {
     formula f_copy = malloc(sizeof(struct formula_t));
     f_copy->maxNumClauses = f->maxNumClauses;
     f_copy->maxNumLiterals = f->maxNumLiterals;
-    f_copy->isDIMACS = f->isDIMACS;
 
     clause c = f->clauses;
     clause prevClause = NULL;
@@ -291,11 +280,9 @@ formula copyFormula(formula f) {
             prevLit = lit_copy;
 
             lit_copy->negation = lit->negation;
-            if (!f->isDIMACS) {
-                lit_copy->l = lit->l;
-            } else {
-                lit_copy->intL = lit->intL;
-            }
+
+            lit_copy->l = lit->l;
+           
             lit = lit->next;
         }
         if (prevLit != NULL) {

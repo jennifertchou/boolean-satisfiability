@@ -4,29 +4,33 @@
 #include <string.h>
 
 #define BUFSIZE 128
+#define NUMYESCASES 8
+#define NUMNOCASES 4
 
-char* yes_cases[6] = {
+char* yes_cases[NUMYESCASES] = {
     "",
-    "a",
-    "a ^ b",
-    "a ^ a",
-    "a ^ (b v a) ^ (a v d v e)",
-    "a ^ (b v a) ^ (d v e)"
+    "1",
+    "1 ^ 2",
+    "1 ^ 1",
+    "1 ^ (2 v 1) ^ (1 v 3 v 4)",
+    "1 ^ (2 v 1) ^ (3 v 4)",
+    "(1 v -2) ^ (2 v 3) ^ (-3 v -1)",
+    "(1 v -2) ^ (2 v -3) ^ (3 v -4) ^ (-3 v -1)"
 };
 
-char* no_cases[4] = {
-    "a ^ ~a",
-    "a ^ b ^ (~a ^ ~b)",
-    "(a v b) ^ (a v ~b) ^ (~a v b) ^ (~a v ~b)",
-    "(xvyvz)^(xvyv~z)^(xv~yvz)^(xv~yv~z)^(~xvyvz)^(~xvyv~z)^(~xv~yvz)^(~xv~yv~z)"
+char* no_cases[NUMNOCASES] = {
+    "1 ^ -1",
+    "1 ^ 2 ^ (-1 ^ -2)",
+    "(1 v 2) ^ (1 v -2) ^ (-1 v 2) ^ (-1 v -2)",
+    "(1 v 2 v 3)^(1 v 2 v -3)^(1 v -2 v 3)^(1 v -2 v -3)^(-1 v 2 v 3)^(-1 v 2 v -3)^(-1 v -2 v 3)^(-1 v -2 v -3)"
 };
 
 FILE *fp;
 char buf[BUFSIZE];
 
 int main() {
-    printf("SATISFIABLE FORMULAS:\n");
-    for (int i = 0; i < 6; i++) {
+    printf("---SATISFIABLE FORMULAS---\n");
+    for (int i = 0; i < NUMYESCASES; i++) {
         memset(buf, 0, BUFSIZE);
         char* command = malloc(strlen("./solver -i ' '") + strlen(yes_cases[i]));
         strcpy(command, "./solver -i ");
@@ -39,13 +43,16 @@ int main() {
             return -1;
         }
 
+        printf("Test case: %s\n", yes_cases[i]);
         // Get the last line of output which is 
         // SATISFIABLE or NOT SATISFIABLE
-        while (fgets(buf, BUFSIZE, fp) != NULL) {}
+        while (fgets(buf, BUFSIZE, fp) != NULL) {
+            printf(buf);
+        }
 
         // Assert that the output is "SATISFIABLE".
         if (buf[0] == 'S') {
-            printf("'%s' -- Test case passed\n", yes_cases[i]);
+            printf("Test case passed\n\n");
         } else {
         // Wrong answer!
             printf("Incorrect response for %s\n", yes_cases[i]);
@@ -60,8 +67,8 @@ int main() {
         free(command);
     }
 
-    printf("\nNOT SATISFIABLE FORMULAS:\n");
-    for (int i = 0; i < 4; i++) {
+    printf("---NOT SATISFIABLE FORMULAS---\n");
+    for (int i = 0; i < NUMNOCASES; i++) {
         memset(buf, 0, BUFSIZE);
         char* command = malloc(strlen("./solver -i ' '") + strlen(no_cases[i]));
         strcpy(command, "./solver -i ");
@@ -76,11 +83,12 @@ int main() {
 
         // Get the last line of output which is 
         // SATISFIABLE or NOT SATISFIABLE
+        printf("Test case: %s\n", no_cases[i]);
         while (fgets(buf, BUFSIZE, fp) != NULL) {}
 
         // Assert that the output is "NOT SATISFIABLE".
         if (buf[0] == 'N') {
-            printf("'%s' -- Test case passed\n", no_cases[i]);
+            printf("Test case passed\n\n");
         } else {
         // Wrong answer!
             printf("Incorrect response for %s\n", no_cases[i]);
@@ -94,6 +102,6 @@ int main() {
         }
         free(command);
     }
-    printf("\nAll tests passed!\n");
+    printf("All tests passed!\n");
     return 0;
 }

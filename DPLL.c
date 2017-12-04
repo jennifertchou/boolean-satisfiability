@@ -20,13 +20,14 @@ int main(int argc, char *argv[]) {
     while ((opt = getopt(argc, argv, "hvi:f:")) != -1) {
         switch (opt){
             case 'h':
-                printf("Usage: ./solver [-h] [-v] [-i x]/[-f p] -- program to determine whether "
-                 "the given boolean formula is satisfiable or not.\n");
-                printf("where:\n" 
+                printf("Usage: ./solver [-h] [-v] [-i x]/[-f p] -- program to determine\n"
+                    "whether the given boolean formula is satisfiable or not where:\n");
+                printf( 
                     "-h  show this help text\n"
                     "-v  verbose mode\n"
-                    "-i  input formula such as '(a v ~b) ^ c ^ (~a v d)'\n"
-                    "-f  path to file of test case in DIMACS cnf format\n");
+                    "-i  input CNF formula such as '(1 v -2) ^ 3 ^ (-1 v 4)',\n"
+                    "\twhere the variables are increasing consecutive integers \n"
+                    "-f  path to file of test case in DIMACS CNF format\n");
                 return 0;
                 break;
             case 'v': 
@@ -71,24 +72,29 @@ int main(int argc, char *argv[]) {
     }
 
     // Run the satisfiability algorithm.
-    bool satisfiable;
-    if (!f->isDIMACS) {
-        satisfiable = DPLL(f);
-    } else {
-        char* assignment = malloc(sizeof(char) * (f->maxNumLiterals + 1));
-        memset(assignment, 0, f->maxNumLiterals + 1);
-        satisfiable = DPLL_DIMACS(f, assignment);
-        if (satisfiable) {
-            for (int i = 0; i < f->maxNumLiterals; i++) {
-                if (assignment[i]) {
-                    printf("%d ", i);
-                }
+    char* assignment = malloc(sizeof(char) * (f->maxNumLiterals + 1));
+    memset(assignment, 0, f->maxNumLiterals + 1);
+    bool satisfiable = DPLL(f, assignment);
+    if (satisfiable) {
+        printf("True variables: ");
+        for (int i = 1; i < f->maxNumLiterals; i++) {
+            if (assignment[i]) {
+                printf("%d ", i);
             }
-            printf("\n");
         }
-        
-        free(assignment);
+        printf("\n");
+
+        // printf("False variables: ");
+        // for (int i = 1; i < f->maxNumLiterals; i++) {
+        //     if (assignment[i] == 0) {
+        //         printf("%d ", i);
+        //     }
+        // }
+        // printf("\n");
     }
+    
+    free(assignment);
+    
 
     if (satisfiable) printf("SATISFIABLE\n");
     else printf("NOT SATISFIABLE\n");
@@ -97,7 +103,7 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
-bool DPLL_DIMACS(formula f, char assignment[]) {
+bool DPLL(formula f, char assignment[]) {
     if (verbose) printFormula(f);
     // If formula has no clauses, it is satisfiable.
     if (f->clauses == NULL) {
@@ -122,14 +128,15 @@ bool DPLL_DIMACS(formula f, char assignment[]) {
     while (c != NULL) {
         // Check if this is a unit clause
         literal lit = c->literals;
-        int var = lit->intL;
+        int var = lit->l;
+        int negation = lit->negation;
         if (lit != NULL && lit->next == NULL) {
             // Perform unit propgation: make this literal true
-            f = unit_propagate(f, lit->l, lit->intL, lit->negation);
+            f = unit_propagate(f, var, negation);
 
             // Restart because we may have removed some clauses
-            if (DPLL_DIMACS(f, assignment)) {
-                assignment[var] = 1;
+            if (DPLL(f, assignment)) {
+                if (!negation) assignment[var] = 1;
                 return true;
                 
             } else {
@@ -149,69 +156,21 @@ bool DPLL_DIMACS(formula f, char assignment[]) {
     // Splitting case, choose any literal and try making it true or false.
     //printf("split case\n");
     literal lit = f->clauses->literals;
-    int var = lit->intL;
+    int var = lit->l;
     formula formula_copy = copyFormula(f);
-    if (DPLL_DIMACS(simplify(formula_copy, lit->l, lit->intL, 0), assignment)) {
+    if (DPLL(simplify(formula_copy, lit->l, 0), assignment)) {
+        // The literal is true.
         assignment[var] = 1;
         freeFormula(formula_copy);
         return true;
-    } else if (DPLL_DIMACS(simplify(f,lit->l, lit->intL, 1), assignment)) {
-        assignment[var] = 1;
+    } else if (DPLL(simplify(f,lit->l, 1), assignment)) {
+        // The negation of the literal is true, so don't touch assignment.
         freeFormula(formula_copy);
         return true;
     }
     freeFormula(formula_copy);
     return false;
 }
-
-bool DPLL(formula f) {
-    if (verbose) printFormula(f);
-    // If formula has no clauses, it is satisfiable.
-    if (f->clauses == NULL) {
-        //printf("No clauses\n");
-        return true;
-    }
-
-    // If formula has an empty clause, it is not satisfiable.
-    clause c = f->clauses;
-    while (c != NULL) {
-        if (c->literals == NULL) {
-            //printf("Found empty clause\n");
-            return false;
-        }
-        c = c->next;
-    }
-
-    // Unit propagation
-    // If formula contains a clause with just one literal, make that literal
-    // true.
-    c = f->clauses;
-    while (c != NULL) {
-        // Check if this is a unit clause
-        literal lit = c->literals;
-        if (lit != NULL && lit->next == NULL) {
-            // Perform unit propgation: make this literal true
-            f = unit_propagate(f, lit->l, lit->intL, lit->negation);
-
-            // Restart because we may have removed some clauses;
-            return DPLL(f);
-        }
-        c = c->next;
-    }
-
-    // Just in case there are no more clauses or literals left.
-    if (f->clauses == NULL || f->clauses->literals == NULL) {
-        // The formula has no clauses, so it is satisfiable.
-        return true;
-    }
-
-    // Splitting case, choose any literal and try making it true or false.
-    //printf("split case\n");
-    literal lit = f->clauses->literals;
-    return DPLL(simplify(copyFormula(f), lit->l, lit->intL, 0))
-            || DPLL(simplify(f,lit->l, lit->intL, 1));
-}
-
 
 // Unit propagation:
 // If a clause is a unit clause (it contains only a single unassigned
@@ -226,7 +185,7 @@ bool DPLL(formula f) {
 // If ~l is a unit clause, l should be made false.
 // Remove clauses in the formula where ~l appears and remove l from
 // clauses where it appears.
-formula unit_propagate(formula f, char l, int intL, int negation) {
+formula unit_propagate(formula f, int l, int negation) {
     //printf("in unit_propagate\n");
     // printFormula(f);
     clause prevClause = NULL;
@@ -238,14 +197,9 @@ formula unit_propagate(formula f, char l, int intL, int negation) {
         while (lit != NULL) {
             bool removedLiteral = false;
             // Check if this literal is the one we are setting to true.
-            if (( (!f->isDIMACS && lit->l == l) || (f->isDIMACS && lit->intL == intL) )
-                    && lit->negation == negation) {
+            if (lit->l == l && lit->negation == negation) {
                 // Remove this entire clause, since the literal satisfies 
                 // this clause.
-
-                //if (f->isDIMACS) printf("Removing the clause with %d, %d\n", negation, intL);
-                //else printf("Removing the clause with %d, %c\n", negation, l);
-
                 if (prevClause == NULL) {
                     f->clauses = c->next;
                     prevClause = NULL;
@@ -257,7 +211,7 @@ formula unit_propagate(formula f, char l, int intL, int negation) {
                 break;
             }
             // This literal is the negation of the desired literal.
-            else if ((!f->isDIMACS && lit->l == l) || (f->isDIMACS && lit->intL == intL)) {
+            else if (lit->l == l) {
                 // Remove the opposite of the literal from the clause because
                 // it can't make this clause true.
                 //printf("Removing the literal %d, %c\n", lit->negation, l);
@@ -299,9 +253,9 @@ formula pure_literal_assign(formula f, char l) {
     return f;
 }
 
-formula simplify(formula f, char l, int intL, int negation) {
+formula simplify(formula f, int l, int negation) {
     // remove clauses in formula where l is positive
     // remove ~l from clauses where it appears
     // return new formula
-    return unit_propagate(f, l, intL, negation);
+    return unit_propagate(f, l, negation);
 }

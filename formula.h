@@ -15,10 +15,7 @@
 
 struct literal_t {
     int negation;
-    // Only one of l or intL will be used, depending if the variable is a
-    // letter or a number.
-    char l;
-    int intL;
+    int l;
     struct literal_t* next;
 };
 typedef struct literal_t* literal;
@@ -33,7 +30,6 @@ struct formula_t {
     struct clause_t* clauses;
     int maxNumClauses;
     int maxNumLiterals;
-    bool isDIMACS;
 
 };
 typedef struct formula_t* formula;
