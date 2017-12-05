@@ -62,7 +62,6 @@ formula createFormula(char* s) {
     removeWhitespace(s);
     formula f = malloc(sizeof(struct formula_t));
 
-    f->maxNumClauses = countNumClauses(s);
     f->maxNumLiterals = countNumLiterals(s);
 
     // Put all the clauses in a queue for now in order for strtok
@@ -134,7 +133,6 @@ clause createClause(char* s) {
 formula createFormulaFromDIMACS(char* fileName) {
     formula f = malloc(sizeof(struct formula_t));
     int numVars = 0; // Will always get initialized.
-    int numClauses = 0; // Will always get initialized.
     clause prevClause = NULL;
 
     FILE* file = fopen(fileName, "r");
@@ -154,7 +152,6 @@ formula createFormulaFromDIMACS(char* fileName) {
             strtok(line, " ");
             strtok(NULL, " ");
             numVars = atoi(strtok(NULL, " "));
-            numClauses = atoi(strtok(NULL, " "));
             continue;
         }
 
@@ -183,7 +180,6 @@ formula createFormulaFromDIMACS(char* fileName) {
     }
 
     f->maxNumLiterals = numVars;
-    f->maxNumClauses = numClauses;
     return f;
 }
 
@@ -254,7 +250,6 @@ void printFormula(formula f) {
 
 formula copyFormula(formula f) {
     formula f_copy = malloc(sizeof(struct formula_t));
-    f_copy->maxNumClauses = f->maxNumClauses;
     f_copy->maxNumLiterals = f->maxNumLiterals;
 
     clause c = f->clauses;

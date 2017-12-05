@@ -1,4 +1,5 @@
 #!/bin/bash
 for filename in unsat_cases/*/*.cnf; do
+    echo $filename
     ./solver -f "$filename"
 done

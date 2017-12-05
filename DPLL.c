@@ -71,9 +71,10 @@ int main(int argc, char *argv[]) {
         printFormula(f);
     }
 
-    // Run the satisfiability algorithm.
     char* assignment = malloc(sizeof(char) * (f->maxNumLiterals + 1));
     memset(assignment, 0, f->maxNumLiterals + 1);
+
+    // Run the satisfiability algorithm.
     bool satisfiable = DPLL(f, assignment);
     if (satisfiable) {
         printf("True variables: ");
@@ -83,14 +84,6 @@ int main(int argc, char *argv[]) {
             }
         }
         printf("\n");
-
-        // printf("False variables: ");
-        // for (int i = 1; i < f->maxNumLiterals; i++) {
-        //     if (assignment[i] == 0) {
-        //         printf("%d ", i);
-        //     }
-        // }
-        // printf("\n");
     }
     
     free(assignment);
@@ -107,7 +100,6 @@ bool DPLL(formula f, char assignment[]) {
     if (verbose) printFormula(f);
     // If formula has no clauses, it is satisfiable.
     if (f->clauses == NULL) {
-        //printf("No clauses\n");
         return true;
     }
 
@@ -115,34 +107,31 @@ bool DPLL(formula f, char assignment[]) {
     clause c = f->clauses;
     while (c != NULL) {
         if (c->literals == NULL) {
-            //printf("Found empty clause\n");
+            // Found empty clause.
             return false;
         }
         c = c->next;
     }
 
-    // Unit propagation
-    // If formula contains a clause with just one literal, make that literal
-    // true.
+    // Unit propagation:
+    // If formula contains a clause with just one literal, you have to make
+    // that literal true.
     c = f->clauses;
     while (c != NULL) {
-        // Check if this is a unit clause
         literal lit = c->literals;
         int var = lit->l;
         int negation = lit->negation;
         if (lit != NULL && lit->next == NULL) {
-            // Perform unit propgation: make this literal true
-            f = unit_propagate(f, var, negation);
+            // Found a unit clause, so make this literal true
+            f = simplify(f, var, negation);
 
             // Restart because we may have removed some clauses
             if (DPLL(f, assignment)) {
                 if (!negation) assignment[var] = 1;
-                return true;
-                
+                return true;  
             } else {
                 return false;
             }
-            
         }
         c = c->next;
     }
@@ -154,7 +143,6 @@ bool DPLL(formula f, char assignment[]) {
     }
 
     // Splitting case, choose any literal and try making it true or false.
-    //printf("split case\n");
     literal lit = f->clauses->literals;
     int var = lit->l;
     formula formula_copy = copyFormula(f);
@@ -172,22 +160,9 @@ bool DPLL(formula f, char assignment[]) {
     return false;
 }
 
-// Unit propagation:
-// If a clause is a unit clause (it contains only a single unassigned
-// literal), this clause can only be satisfied by assigning the necessary 
-// value to make this literal true. You can remove the negation of the literal
-// from any clauses because it can't make its clause true. 
-//
-// If l is a unit clause, l should be made true.
-// Remove clauses in the formula where l appears and remove ~l from
-// clauses where it appears.
-//
-// If ~l is a unit clause, l should be made false.
-// Remove clauses in the formula where ~l appears and remove l from
-// clauses where it appears.
-formula unit_propagate(formula f, int l, int negation) {
-    //printf("in unit_propagate\n");
-    // printFormula(f);
+// Remove clauses in the formula where the literal appears.
+// Remove the negation of the literal from the clauses where it appears.
+formula simplify(formula f, int l, int negation) {
     clause prevClause = NULL;
     clause c = f->clauses;
     while (c != NULL) {
@@ -212,9 +187,8 @@ formula unit_propagate(formula f, int l, int negation) {
             }
             // This literal is the negation of the desired literal.
             else if (lit->l == l) {
-                // Remove the opposite of the literal from the clause because
+                // Remove the negation of the literal from the clause because
                 // it can't make this clause true.
-                //printf("Removing the literal %d, %c\n", lit->negation, l);
                 if (prevLit == NULL) {
                     c->literals = lit->next;
                     prevLit = NULL;
@@ -241,21 +215,4 @@ formula unit_propagate(formula f, int l, int negation) {
         c = nextClause;
     }
     return f;
-}
-
-// Pure literal elimination:
-// If a propositional variable occurs with only one polarity in 
-// the formula, it is called pure. Pure literals can always be
-// assigned in a way that makes all clauses containing them true.
-// Thus, these clauses do not constrain the search anymore and can 
-// be deleted. 
-formula pure_literal_assign(formula f, char l) {
-    return f;
-}
-
-formula simplify(formula f, int l, int negation) {
-    // remove clauses in formula where l is positive
-    // remove ~l from clauses where it appears
-    // return new formula
-    return unit_propagate(f, l, negation);
 }

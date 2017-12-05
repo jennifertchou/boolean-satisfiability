@@ -9,7 +9,7 @@ solver: queues.c formula.c DPLL.c
 	$(CC) $(CFLAGS) -o solver queues.c formula.c DPLL.c
 
 solver-test: solver_test.c
-	$(CC) $(CFLAGS) -o solver-test solver_test.c
+	$(CC) $(CFLAGS) -o run_solver_test solver_test.c
 
 clean: 
-	$(RM) solver solver-test
+	$(RM) solver run_solver_test

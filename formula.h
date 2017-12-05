@@ -28,7 +28,6 @@ typedef struct clause_t* clause;
 
 struct formula_t {
     struct clause_t* clauses;
-    int maxNumClauses;
     int maxNumLiterals;
 
 };
