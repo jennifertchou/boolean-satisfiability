@@ -47,7 +47,7 @@ int main() {
         // Get the last line of output which is 
         // SATISFIABLE or NOT SATISFIABLE
         while (fgets(buf, BUFSIZE, fp) != NULL) {
-            printf(buf);
+            printf("%s", buf);
         }
 
         // Assert that the output is "SATISFIABLE".
