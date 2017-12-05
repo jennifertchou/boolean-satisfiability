@@ -11,7 +11,7 @@ Usage
 
 -v  verbose mode
 
--i  input CNF formula such as '(1 v -2) ^ 3 ^ (-1 v 4)', where the variables are increasing consecutive integers. Negative numbers denote the negations of the corresponding variables.
+-i  input CNF formula such as "(1 v -2) ^ 3 ^ (-1 v 4)", where the variables are increasing consecutive integers. Negative numbers denote the negations of the corresponding variables.
 
 -f  path to file of test case in [DIMACS CNF format](http://people.sc.fsu.edu/~jburkardt/data/cnf/cnf.html)
 
@@ -23,8 +23,8 @@ Example Usage:
 
 Test Scripts:
 ------------
-`./run_solver_tests` -- tests some satisfiable and not satisfiable formulas using `-i`
+`./run_solver_tests` -- tests some satisfiable and unsatisfiable formulas using `-i`
 
-`./run_sat_cases` -- tests satisfiable formulas using `-f`
+`./run_sat_cases` -- tests satisfiable DIMACS formulas in `sat_cases/` using `-f`
 
-`./run_unsat_cases` -- tests unsatisfiable formulas using `-f`
+`./run_unsat_cases` -- tests unsatisfiable DIMACS formulas in `unsat_cases/` using `-f`
