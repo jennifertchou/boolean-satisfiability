@@ -4,7 +4,7 @@
 #include <assert.h>
 #include "DPLL.h"
 #include "formula.h"
-#include "queues.h"
+#include "lib/queues.h"
 
 
 void removeWhitespace(char* source) {

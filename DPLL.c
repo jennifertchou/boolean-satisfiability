@@ -25,8 +25,9 @@ int main(int argc, char *argv[]) {
                 printf( 
                     "-h  show this help text\n"
                     "-v  verbose mode\n"
-                    "-i  input CNF formula such as '(1 v -2) ^ 3 ^ (-1 v 4)',\n"
-                    "\twhere the variables are increasing consecutive integers \n"
+                    "-i  input CNF formula such as '(1 v -2) ^ 3 ^ (-1 v 4)', where the variables\n"
+                    "\tare increasing consecutive integers. Negative numbers denote the\n"
+                    "\tnegations of the corresponding variables.\n"
                     "-f  path to file of test case in DIMACS CNF format\n");
                 return 0;
                 break;
