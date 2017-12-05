@@ -19,7 +19,7 @@ Example Usage:
 ------------
 `./solver -i "1 ^ (2 v -1) ^ (1 v 3 v 4)"`
 
-`./solver -f sat_cases/uf50-0985.cnf`
+`./solver -f sat_cases/uf50-0558.cnf`
 
 Test Scripts:
 ------------
