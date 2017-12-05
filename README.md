@@ -23,7 +23,7 @@ Example Usage:
 
 Test Scripts:
 ------------
-`./run_solver_tests` -- tests some satisfiable and unsatisfiable formulas using `-i`
+`./run_solver_test` -- tests some satisfiable and unsatisfiable formulas using `-i`
 
 `./run_sat_cases` -- tests satisfiable DIMACS formulas in `sat_cases/` using `-f`
 
