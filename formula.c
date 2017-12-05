@@ -63,6 +63,7 @@ formula createFormula(char* s) {
     formula f = malloc(sizeof(struct formula_t));
 
     f->maxNumLiterals = countNumLiterals(s);
+    f->clauses = NULL;
 
     // Put all the clauses in a queue for now in order for strtok
     // to work when parsing the literals within the clause.
@@ -99,6 +100,7 @@ formula createFormula(char* s) {
 
 clause createClause(char* s) {
     clause c = malloc(sizeof(struct clause_t));
+    c->literals = NULL;
 
     char* l = strtok(s, "v");
 
