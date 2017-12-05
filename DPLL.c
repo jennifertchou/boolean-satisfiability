@@ -79,7 +79,7 @@ int main(int argc, char *argv[]) {
     bool satisfiable = DPLL(f, assignment);
     if (satisfiable) {
         printf("True variables: ");
-        for (int i = 1; i < f->maxNumLiterals; i++) {
+        for (int i = 1; i < f->maxNumLiterals + 1; i++) {
             if (assignment[i]) {
                 printf("%d ", i);
             }
@@ -124,6 +124,10 @@ bool DPLL(formula f, char assignment[]) {
         int negation = lit->negation;
         if (lit != NULL && lit->next == NULL) {
             // Found a unit clause, so make this literal true
+            if (verbose) {
+                if (negation) printf("Assigning variable -%d to be true\n", var);
+                else printf("Assigning variable %d to be true\n", var);
+            }
             f = simplify(f, var, negation);
 
             // Restart because we may have removed some clauses
