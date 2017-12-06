@@ -1,0 +1,30 @@
+Description of file contents
+
+---------------
+IMPLEMENTATION
+---------------
+lib/queues.c      Implementation of the queue data structure
+lib/queue.h
+
+DPLL.c            Implementation of the solver (DPLL algorithm with unit propagation)
+DPLL.h
+
+formula.c         Implementation of the data structure I created to hold the boolean formulas
+formula.h
+
+solver            Executable of the solver
+
+------
+TESTS
+------
+solver_test.c     Test file that runs the solver on both satisfiable and unsatisfiable test cases
+
+run_solver_tests  Executable that runs the tests in solver_test.c
+
+sat_cases/        Directory of satisfiable test cases
+unsat_cases/      Directory of unstisfiable test cases
+
+run_sat_tests     Test script that runs the solver on all the files in sat_cases/
+run_unsat_tests   Test script that runs the solver on all the files in unsat_cases/
+
+
