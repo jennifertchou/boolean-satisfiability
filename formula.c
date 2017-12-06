@@ -78,7 +78,7 @@ formula createFormula(char* s) {
     clause prevClause = NULL;
     while (!queue_empty(Q)) {
         char* clause_string = (char*)deq(Q);
-        clause c = createClause(clause_string);
+        clause c = createClause(clause_string, false /* isDIMACS */);
         assert(c != NULL);
 
         if (prevClause == NULL) {
@@ -98,43 +98,11 @@ formula createFormula(char* s) {
     return f;
 }
 
-clause createClause(char* s) {
-    clause c = malloc(sizeof(struct clause_t));
-    c->literals = NULL;
-
-    char* l = strtok(s, "v");
-
-    literal prevLit = NULL;
-    while (l != NULL) {
-        literal lit = malloc(sizeof(struct literal_t));
-
-        lit->l = abs(atoi(l));
-        if (l[0] == '-') {
-            lit->negation = 1;
-        } else {
-            lit->negation = 0;
-        }
-
-        if (prevLit == NULL) {
-            c->literals = lit;
-            prevLit = lit;
-        } else {
-            prevLit->next = lit;
-            prevLit = lit;
-        }
-        
-        l = strtok(NULL, "v");
-    }
-    if (prevLit != NULL) {
-        prevLit->next = NULL;
-    }
-
-    return c;
-}
-
 formula createFormulaFromDIMACS(char* fileName) {
     formula f = malloc(sizeof(struct formula_t));
     int numVars = 0; // Will always get initialized.
+    int numClauses = 0; // Will always get initialized.
+    int numClausesSeen = 0;
     clause prevClause = NULL;
 
     FILE* file = fopen(fileName, "r");
@@ -154,16 +122,12 @@ formula createFormulaFromDIMACS(char* fileName) {
             strtok(line, " ");
             strtok(NULL, " ");
             numVars = atoi(strtok(NULL, " "));
+            numClauses = atoi(strtok(NULL, " "));
             continue;
         }
 
-        // EOF.
-        if (line[0] == '%') {
-            break;
-        }
-
         // Normal case: x y z 0.
-        clause c = createClauseFromDIMACS(line);
+        clause c = createClause(line, true /* isDIMACS */);
         assert(c != NULL);
 
         if (prevClause == NULL) {
@@ -173,6 +137,11 @@ formula createFormulaFromDIMACS(char* fileName) {
             prevClause->next = c;
             prevClause = c; 
         }   
+
+        numClausesSeen += 1;
+        if (numClausesSeen >= numClauses) {
+            break;
+        }
     }
     
     fclose(file);
@@ -185,42 +154,40 @@ formula createFormulaFromDIMACS(char* fileName) {
     return f;
 }
 
-// line looks like: x y z 0
-clause createClauseFromDIMACS(char* line) {
+clause createClause(char* s, bool isDIMACS) {
     clause c = malloc(sizeof(struct clause_t));
+    c->literals = NULL;
 
-    literal lit1 = malloc(sizeof(struct literal_t));
-    literal lit2 = malloc(sizeof(struct literal_t));
-    literal lit3 = malloc(sizeof(struct literal_t));
+    char* l = strtok(s, " v");
 
-    char* l1 = strtok(line, " ");
-    lit1->l = abs(atoi(l1));
-    if (l1[0] == '-') {
-        lit1->negation = 1;
-    } else {
-        lit1->negation = 0;
+    literal prevLit = NULL;
+    while (l != NULL) {
+        if (isDIMACS && atoi(l) == 0) {
+            break;
+        }
+
+        literal lit = malloc(sizeof(struct literal_t));
+
+        lit->l = abs(atoi(l));
+        if (l[0] == '-') {
+            lit->negation = 1;
+        } else {
+            lit->negation = 0;
+        }
+
+        if (prevLit == NULL) {
+            c->literals = lit;
+            prevLit = lit;
+        } else {
+            prevLit->next = lit;
+            prevLit = lit;
+        }
+        
+        l = strtok(NULL, " v");
     }
-
-    char* l2 = strtok(NULL, " ");
-    lit2->l = abs(atoi(l2));
-    if (l2[0] == '-') {
-        lit2->negation = 1;
-    } else {
-        lit2->negation = 0;
+    if (prevLit != NULL) {
+        prevLit->next = NULL;
     }
-
-    char* l3 = strtok(NULL, " ");
-    lit3->l = abs(atoi(l3));
-    if (l3[0] == '-') {
-        lit3->negation = 1;
-    } else {
-        lit3->negation = 0;
-    }
-
-    c->literals = lit1;
-    lit1->next = lit2;
-    lit2->next = lit3;
-    lit3->next = NULL;
 
     return c;
 }

@@ -25,6 +25,6 @@ Test Scripts:
 ------------
 `./run_solver_test` -- tests some satisfiable and unsatisfiable formulas using `-i`
 
-`./run_sat_cases` -- tests satisfiable DIMACS formulas in `sat_cases/` using `-f`
+`./run_sat_tests` -- tests satisfiable DIMACS formulas in `sat_cases/` using `-f`
 
-`./run_unsat_cases` -- tests unsatisfiable DIMACS formulas in `unsat_cases/` using `-f`
+`./run_unsat_tests` -- tests unsatisfiable DIMACS formulas in `unsat_cases/` using `-f`
