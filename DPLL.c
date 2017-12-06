@@ -125,8 +125,8 @@ bool DPLL(formula f, char assignment[]) {
         if (lit != NULL && lit->next == NULL) {
             // Found a unit clause, so make this literal true
             if (verbose) {
-                if (negation) printf("Assigning variable -%d to be true\n", var);
-                else printf("Assigning variable %d to be true\n", var);
+                if (negation) printf("Assigning unit clause variable %d to be false\n", var);
+                else printf("Assigning unit clause variable %d to be true\n", var);
             }
             f = simplify(f, var, negation);
 
